@@ -1,5 +1,5 @@
 //const createArtifact = require('./utils/create-artifact');
-const deploy = require('./utils/deploy');
+//const deploy = require('./utils/deploy');
 
 
 /* createArtifact({

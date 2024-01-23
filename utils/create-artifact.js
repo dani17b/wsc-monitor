@@ -10,11 +10,13 @@ module.exports = async function createArtifact(options) {
     // 1. Clone repository
     const artifactFolder = `/home/apps/${options.artifactName}`;
 
-    const repository = `https://${GH_TOKEN}@${options.repository.split('https://')[1]}`;
-    execSync(`git clone ${repository} ${artifactFolder}`, {
-        stdio: 'inherit'
-    });
-
+    if(!fs.existsSync(artifactFolder)){
+        const repository = `https://${GH_TOKEN}@${options.repository.split('https://')[1]}`;
+        execSync(`git clone ${repository} ${artifactFolder}`, {
+            stdio: 'inherit'
+        });
+    }
+    
     // 2. Create descriptor for artifact
     const deploymentsInfoPath = `/home/apps/.deployments-info.json`;
     const deploymentsInfo = fs.existsSync(deploymentsInfoPath) ? JSON.parse(fs.readFileSync(deploymentsInfoPath, {

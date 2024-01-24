@@ -1,6 +1,7 @@
 const fs = require('fs-extra');
 var util = require('util');
 var bodyParser = require('body-parser');
+var cors = require('cors');
 
 var log_file = fs.createWriteStream(__dirname + '/debug.log', {flags : 'w'});
 var log_stdout = process.stdout;
@@ -34,6 +35,7 @@ const deploy = require('./utils/deploy');
 const express = require('express');
 const app = express();
 app.use(bodyParser.json());
+app.use(cors());
 
 const port = process.env.PORT || 3000;
 

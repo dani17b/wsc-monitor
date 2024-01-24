@@ -14,9 +14,13 @@ module.exports = async function deploy(artifactName, options) {
 
     // 2. If artifact is running, stop it
     if(artifactDescriptor.instance && artifactDescriptor.instance.status == 'running'){
-        execSync(`kill -9 ${artifactDescriptor.instance.pid}`, {
-            stdio: 'inherit'
-        });
+        try{
+            execSync(`kill -9 ${artifactDescriptor.instance.pid}`, {
+                stdio: 'inherit'
+            });
+        } catch(e){
+            console.log("Error executing ", `kill -9 ${artifactDescriptor.instance.pid}`, e);
+        }
     }
 
     artifactDescriptor.instance = {

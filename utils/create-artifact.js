@@ -11,7 +11,11 @@ module.exports = async function createArtifact(options) {
     const artifactFolder = `/home/apps/${options.artifactName}`;
 
     if(!fs.existsSync(artifactFolder)){
-        const repository = `https://${GH_TOKEN}@${options.repository.split('https://')[1]}`;
+        let repository = options.repository;
+        if(options.private){
+            repository = `https://${GH_TOKEN}@${options.repository.split('https://')[1]}`;
+        }
+        
         execSync(`git clone ${repository} ${artifactFolder}`, {
             stdio: 'inherit'
         });

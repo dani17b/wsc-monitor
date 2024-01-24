@@ -52,6 +52,7 @@ module.exports = async function deploy(artifactName, options) {
     if(artifactDescriptor.deployType == 'server'){
         fs.chmodSync(`./scripts/getFreePort.sh`, 755);
         artifactServerPort = execSync(`./scripts/getFreePort.sh 3000 1`);
+        artifactServerPort = parseInt(artifactServerPort);
     }
 
     switch(artifactDescriptor.type){
@@ -81,6 +82,7 @@ module.exports = async function deploy(artifactName, options) {
                 });
 
                 artifactProcessPID = spawnResult.pid;
+                
                 spawnResult.unref();
             }
             

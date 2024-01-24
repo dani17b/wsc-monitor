@@ -50,6 +50,7 @@ module.exports = async function deploy(artifactName, options) {
 
     let artifactServerPort = null;
     if(artifactDescriptor.deployType == 'server'){
+        fs.chmodSync(`./scripts/getFreePort.sh`, 755);
         artifactServerPort = execSync(`./scripts/getFreePort.sh 3000 1`);
     }
 

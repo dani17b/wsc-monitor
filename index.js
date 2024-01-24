@@ -37,6 +37,8 @@ app.use(bodyParser.json());
 
 const port = process.env.PORT || 3000;
 
+console.log("Going to launch server on port " + port);
+
 app.get('/info', (req, res) => {
   const deploymentsInfoPath = `/home/apps/.deployments-info.json`;
   const deploymentsInfo = JSON.parse(fs.readFileSync(deploymentsInfoPath, {

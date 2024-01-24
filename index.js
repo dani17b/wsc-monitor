@@ -10,7 +10,7 @@ console.log = function(d) { //
   log_stdout.write('[LOG] ' + util.format(d) + '\n');
 };
 
-//const createArtifact = require('./utils/create-artifact');
+const createArtifact = require('./utils/create-artifact');
 //const deploy = require('./utils/deploy');
 
 
@@ -52,7 +52,7 @@ app.post('/deploy', (req, res) => {
 
 app.post('/artifact', (req, res) => {
   const artifactDefinition = req.body;
-  console.log("Hacer la creacion para : " + JSON.stringify(artifactDefinition));
+  createArtifact(artifactDefinition);
   res.status(200);
   res.end();
 });

@@ -1,11 +1,13 @@
 const fs = require('fs-extra');
 var util = require('util');
+var bodyParser = require('body-parser');
+
 var log_file = fs.createWriteStream(__dirname + '/debug.log', {flags : 'w'});
 var log_stdout = process.stdout;
 
 console.log = function(d) { //
-  log_file.write(util.format(d) + '\n');
-  log_stdout.write(util.format(d) + '\n');
+  log_file.write('[LOG] ' + util.format(d) + '\n');
+  log_stdout.write('[LOG] ' + util.format(d) + '\n');
 };
 
 //const createArtifact = require('./utils/create-artifact');
@@ -26,6 +28,8 @@ console.log = function(d) { //
 
 const express = require('express');
 const app = express();
+app.use(bodyParser.json());
+
 const port = 3000;
 
 app.get('/info', (req, res) => {

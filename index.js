@@ -19,10 +19,6 @@ const express = require('express');
 const app = express();
 const port = 3000;
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
-});
-
 app.get('/info', (req, res) => {
   const deploymentsInfoPath = `/home/apps/.deployments-info.json`;
   const deploymentsInfo = JSON.parse(fs.readFileSync(deploymentsInfoPath, {
@@ -32,6 +28,13 @@ app.get('/info', (req, res) => {
   res.header("Content-Type",'application/json');
   res.status(200);
   res.end(JSON.stringify(deploymentsInfo));
+});
+
+app.post('/deploy', (req, res) => {
+  const body = req.body;
+  console.log("Hacer el deploy con esta info : " + JSON.stringify(body));
+  res.status(200);
+  res.end();
 });
 
 app.listen(port, () => {

@@ -16,7 +16,7 @@ console.error = function(d) { //
 };
 
 const createArtifact = require('./utils/create-artifact');
-//const deploy = require('./utils/deploy');
+const deploy = require('./utils/deploy');
 
 
 /* createArtifact({
@@ -50,7 +50,7 @@ app.get('/info', (req, res) => {
 
 app.post('/deploy', (req, res) => {
   const body = req.body;
-  console.log("TODO Hacer el deploy con esta info : " + JSON.stringify(body));
+  deploy(body.artifactName, {});
   res.status(200);
   res.end();
 });

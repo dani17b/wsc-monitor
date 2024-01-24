@@ -1,5 +1,6 @@
 const fs = require('fs-extra');
 const { execSync,spawn } = require("child_process");
+const createVirtualHost = require('./create-virtual-host');
 
 
 module.exports = async function deploy(artifactName, options) {
@@ -77,6 +78,7 @@ module.exports = async function deploy(artifactName, options) {
                     detached : true,
                     stdio: 'ignore',
                     env : {
+                        ...process.env,
                         PORT : artifactServerPort
                     }
                 });
@@ -96,7 +98,11 @@ module.exports = async function deploy(artifactName, options) {
     }
 
     if(artifactDescriptor.deployType == 'server'){
-        console.log('Hay que tocar el fichero del virtual host para poner el puerto ' + artifactServerPort);
+        createVirtualHost(artifactDescriptor.domain, {
+            type : artifactDescriptor.deployType,
+            name : artifactDescriptor.artifactName,
+            port : artifactServerPort
+        });
     }
 
     artifactDescriptor.instance = {

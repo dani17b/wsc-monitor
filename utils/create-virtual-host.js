@@ -32,7 +32,7 @@ module.exports = async function createVirtualHost(domain, options) {
 
 
 const getSitesAvailableConf = (domain, options) => {
-    const sitesAvailableConf = `
+    let sitesAvailableConf = `
         server {
             listen 80;
             listen [::]:80;
@@ -41,10 +41,27 @@ const getSitesAvailableConf = (domain, options) => {
             index index.html index.htm index.nginx-debian.html;
 
             server_name ${domain} www.${domain};
-
+            `;
+    if(options.type == 'static'){
+        sitesAvailableConf += `        
             location / {
                 try_files $uri $uri/ =404;
             }
+        `;
+    }
+
+    if(options.type == 'server'){
+        sitesAvailableConf += `        
+            location / {
+                proxy_pass http://localhost:${options.port};
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            }
+        `;
+    }
+
+    sitesAvailableConf += `             
         }
     `;
 

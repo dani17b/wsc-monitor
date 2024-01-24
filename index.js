@@ -35,7 +35,7 @@ const express = require('express');
 const app = express();
 app.use(bodyParser.json());
 
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.get('/info', (req, res) => {
   const deploymentsInfoPath = `/home/apps/.deployments-info.json`;

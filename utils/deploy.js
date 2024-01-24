@@ -47,6 +47,12 @@ module.exports = async function deploy(artifactName, options) {
 
     // 3. Install dependencies and build artifact
     let artifactProcessPID = undefined;
+
+    let artifactServerPort = null;
+    if(artifactDescriptor.deployType == 'server'){
+        artifactServerPort = execSync(`./scripts/getFreePort.sh 3000 1`);
+    }
+
     switch(artifactDescriptor.type){
         case 'node':
             execSync('npm install', {
@@ -62,13 +68,15 @@ module.exports = async function deploy(artifactName, options) {
             }
 
             if(artifactDescriptor.deployType == 'server'){
-                console.log('comando : ls ' + artifactFolder + '')
                 fs.chmodSync(artifactFolder, '0777');
 
-                const spawnResult = spawn('node', ['index.js'], {
+                const spawnResult = spawn(artifactDescriptor.launchCommand.split(' ')[0], artifactDescriptor.launchCommand.split(' ').slice(1), {
                     cwd: artifactFolder,
                     detached : true,
-                    stdio: 'ignore'
+                    stdio: 'ignore',
+                    env : {
+                        PORT : artifactServerPort
+                    }
                 });
 
                 artifactProcessPID = spawnResult.pid;
@@ -82,6 +90,10 @@ module.exports = async function deploy(artifactName, options) {
                 stdio: 'inherit'
             });
             break;
+    }
+
+    if(artifactDescriptor.deployType == 'server'){
+        console.log('Hay que tocar el fichero del virtual host para poner el puerto ' + artifactServerPort);
     }
 
     artifactDescriptor.instance = {

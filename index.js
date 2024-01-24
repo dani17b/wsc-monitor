@@ -45,7 +45,14 @@ app.get('/info', (req, res) => {
 
 app.post('/deploy', (req, res) => {
   const body = req.body;
-  console.log("Hacer el deploy con esta info : " + JSON.stringify(body));
+  console.log("TODO Hacer el deploy con esta info : " + JSON.stringify(body));
+  res.status(200);
+  res.end();
+});
+
+app.post('/artifact', (req, res) => {
+  const artifactDefinition = req.body;
+  console.log("Hacer la creacion para : " + JSON.stringify(artifactDefinition));
   res.status(200);
   res.end();
 });

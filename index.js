@@ -1,3 +1,4 @@
+const fs = require('fs-extra');
 //const createArtifact = require('./utils/create-artifact');
 //const deploy = require('./utils/deploy');
 
@@ -8,7 +9,8 @@
     type : 'node', // OR maven
     deployType : 'static',
     deployTarget : 'build',
-    repository : 'https://github.com/altia-itx/web-docurag.git'
+    repository : 'https://github.com/altia-itx/web-docurag.git',
+    launchCommand : 'node index.js'
 }); */
 
 //deploy('web-docurag', {});
@@ -18,9 +20,20 @@ const app = express();
 const port = 3000;
 
 app.get('/', (req, res) => {
-  res.send('Hello World!')
+  res.send('Hello World!');
+});
+
+app.get('/info', (req, res) => {
+  const deploymentsInfoPath = `/home/apps/.deployments-info.json`;
+  const deploymentsInfo = JSON.parse(fs.readFileSync(deploymentsInfoPath, {
+      encoding : 'UTF-8'
+  }));
+
+  res.header("Content-Type",'application/json');
+  res.status(200);
+  res.end(JSON.stringify(deploymentsInfo));
 });
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
+  console.log(`Example app listening on port ${port}`);
 });

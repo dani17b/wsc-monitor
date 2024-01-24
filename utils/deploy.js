@@ -1,52 +1,94 @@
 const fs = require('fs-extra');
-const rimraf = require('rimraf');
-const { execSync } = require("child_process");
+const { execSync,spawn } = require("child_process");
 
-module.exports = async function createVirtualHost(domain, options) {
-    // 1. Clean previous instalations
-    rimraf.sync(`/var/www/${domain}`);
-    rimraf.sync(`/etc/nginx/sites-enabled/${domain}`);
 
-    // 2. Create virtual host
-    fs.mkdirSync(`/var/www/${domain}`);
-    console.log("Create virtual host", `/var/www/${domain}`);
-    fs.chmodSync(`/var/www/${domain}`, 755);
+module.exports = async function deploy(artifactName, options) {
+    const artifactFolder = `/home/apps/${artifactName}`;
 
-    // 3. Link contents
-    if(options.type == 'static'){
-        fs.symlinkSync(`/home/apps/${options.name}/${options.target}`,`/var/www/${domain}/${options.target}`, `dir`);
+    // 1. Get artifact descriptor
+    const deploymentsInfoPath = `/home/apps/.deployments-info.json`;
+    const deploymentsInfo = JSON.parse(fs.readFileSync(deploymentsInfoPath, {
+        encoding : 'UTF-8'
+    }));
+    const artifactDescriptor = deploymentsInfo[artifactName];
+
+    // 2. If artifact is running, stop it
+    if(artifactDescriptor.instance && artifactDescriptor.instance.status == 'running'){
+        execSync(`kill -9 ${artifactDescriptor.instance.pid}`, {
+            stdio: 'inherit'
+        });
     }
 
-    // 4. Create virtual host config
-    const sitesAvailableConf = getSitesAvailableConf(domain, options);
+    artifactDescriptor.instance = {
+        lastUpdate : new Date().getTime(),
+        status : 'deploying'
+    }
+
     fs.writeFileSync(
-        `/etc/nginx/sites-available/${domain}`,
-        sitesAvailableConf,
+        deploymentsInfoPath,
+        JSON.stringify(deploymentsInfo),
         'UTF-8'
     );
-    
-    // 5. Enable site
-    fs.symlinkSync(`/etc/nginx/sites-available/${domain}`, `/etc/nginx/sites-enabled/${domain}`, `dir`);
-    execSync(`systemctl restart nginx`);
-};
 
+    // 2. Update artifact
+    execSync('git reset --hard', {
+        cwd: artifactFolder,
+        stdio: 'inherit'
+    });
 
-const getSitesAvailableConf = (domain, options) => {
-    const sitesAvailableConf = `
-        server {
-            listen 80;
-            listen [::]:80;
+    execSync('git pull', {
+        cwd: artifactFolder,
+        stdio: 'inherit'
+    });
 
-            root /var/www/${domain}${options.type == 'static' ? ('/' + options.target) : ''};
-            index index.html index.htm index.nginx-debian.html;
+    // 3. Install dependencies and build artifact
+    let artifactProcessPID = undefined;
+    switch(artifactDescriptor.type){
+        case 'node':
+            execSync('npm install', {
+                cwd: artifactFolder,
+                stdio: 'inherit'
+            });
 
-            server_name ${domain} www.${domain};
-
-            location / {
-                try_files $uri $uri/ =404;
+            if(artifactDescriptor.deployType == 'static'){
+                execSync('npm run build', {
+                    cwd: artifactFolder,
+                    stdio: 'inherit'
+                });
             }
-        }
-    `;
 
-    return sitesAvailableConf;
-}
+            if(artifactDescriptor.deployType == 'server'){
+                console.log('comando : ls ' + artifactFolder + '')
+                fs.chmodSync(artifactFolder, '0777');
+
+                const spawnResult = spawn('node', ['index.js'], {
+                    cwd: artifactFolder,
+                    detached : true,
+                    stdio: 'ignore'
+                });
+
+                artifactProcessPID = spawnResult.pid;
+                spawnResult.unref();
+            }
+            
+            break;
+        case 'maven':
+            execSync('mvn clean install', {
+                cwd: artifactFolder,
+                stdio: 'inherit'
+            });
+            break;
+    }
+
+    artifactDescriptor.instance = {
+        lastUpdate : new Date().getTime(),
+        status : 'running',
+        pid : artifactProcessPID
+    }
+
+    fs.writeFileSync(
+        deploymentsInfoPath,
+        JSON.stringify(deploymentsInfo),
+        'UTF-8'
+    );
+};

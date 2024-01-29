@@ -21,8 +21,8 @@ const createArtifact = require('./utils/create-artifact');
 const deploy = require('./utils/deploy');
 
 const express = require('express');
-const createDeploy = require('./utils/create_deploy');
-const getPendingDeploys = require('./utils/get_pending_deploys');
+const createDeploy = require('./utils/create-deploy');
+const getPendingDeploys = require('./utils/get-pending-deploys');
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());

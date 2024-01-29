@@ -35,10 +35,19 @@ module.exports = async function createArtifact(options) {
         'UTF-8'
     );
 
-    // 3. Create virtual host
+    // 3. Get free port
+    let artifactServerPort = null;
+    if(artifactDescriptor.deployType == 'server'){
+        fs.chmodSync(`./scripts/getFreePort.sh`, 755);
+        artifactServerPort = execSync(`./scripts/getFreePort.sh 3000 1`);
+        artifactServerPort = parseInt(artifactServerPort);
+    }
+
+    // 4. Create virtual host
     createVirtualHost(options.domain, {
         type : options.deployType,
         name : options.artifactName,
-        target : options.deployTarget
+        target : options.deployTarget,
+        port : artifactServerPort
     });
 };

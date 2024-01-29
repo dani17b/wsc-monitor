@@ -2,6 +2,7 @@ const fs = require('fs-extra');
 var util = require('util');
 var bodyParser = require('body-parser');
 var cors = require('cors');
+var cron = require('node-cron');
 
 var log_file = fs.createWriteStream(__dirname + '/debug.log', {flags : 'w'});
 var log_stdout = process.stdout;
@@ -54,6 +55,7 @@ app.get('/info', (req, res) => {
 
 app.post('/deploy', (req, res) => {
   const body = req.body;
+  console.log("body : " + JSON.stringify(body));
   deploy(body.artifactName, {});
   res.status(200);
   res.end();
@@ -68,4 +70,8 @@ app.post('/artifact', (req, res) => {
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
+});
+
+cron.schedule('*/1 * * * *', () => {
+  console.log('CHECK DEPLOYS PENDING running a task 1 minute');
 });

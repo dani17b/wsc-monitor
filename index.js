@@ -20,20 +20,9 @@ console.error = function(d) { //
 const createArtifact = require('./utils/create-artifact');
 const deploy = require('./utils/deploy');
 
-
-/* createArtifact({
-    artifactName : 'web-docurag',
-    domain : 'docurag.altiacamp.com',
-    type : 'node', // OR maven
-    deployType : 'static',
-    deployTarget : 'build',
-    repository : 'https://github.com/altia-itx/web-docurag.git',
-    launchCommand : 'node index.js'
-}); */
-
-//deploy('web-docurag', {});
-
 const express = require('express');
+const createDeploy = require('./utils/create_deploy');
+const getPendingDeploys = require('./utils/get_pending_deploys');
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
@@ -56,10 +45,20 @@ app.get('/info', (req, res) => {
 app.post('/deploy', (req, res) => {
   const body = req.body;
   console.log("body : " + JSON.stringify(body));
-  deploy(body.artifactName, {});
+  //deploy(body.artifactName, {});
+  const deployInfo = createDeploy(body.artifactName);
+  
+  res.header("Content-Type",'application/json');
   res.status(200);
-  res.end();
+  res.end(JSON.stringify(deployInfo));
 });
+
+app.get('/pending_deployments', (req, res) => {
+  const pendingDeployments = getPendingDeploys();
+
+  res.status(200);
+  res.end(JSON.stringify(pendingDeployments));
+})
 
 app.post('/artifact', (req, res) => {
   const artifactDefinition = req.body;
@@ -73,5 +72,7 @@ app.listen(port, () => {
 });
 
 cron.schedule('*/1 * * * *', () => {
+  const pendingDeploys = getPendingDeploys();
   console.log('CHECK DEPLOYS PENDING running a task 1 minute');
+  console.log(JSON.stringify(pendingDeploys));
 });

@@ -2,7 +2,7 @@ const fs = require('fs-extra');
 var util = require('util');
 var bodyParser = require('body-parser');
 var cors = require('cors');
-var cron = require('node-cron');
+const schedule = require('node-schedule');
 
 //var log_file = fs.createWriteStream(__dirname + '/debug.log', {flags : 'w'});
 //var log_stdout = process.stdout;
@@ -81,7 +81,7 @@ app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
 
-cron.schedule('*/1 * * * *', () => {
+schedule.scheduleJob('*/1 * * * *', () => {
   let pendingDeploys = getPendingDeploys();
   
   if(pendingDeploys.length > 0 && pendingDeploys.filter(pendingDeploy => pendingDeploy.status == 'running') == 0){

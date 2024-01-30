@@ -143,35 +143,35 @@ module.exports = async function deploy(pendingDeploy) {
                         throw "Error building artifact";
                     }
                 }
- 
-                if(artifactDescriptor.deployType == 'server'){
-                    fs.chmodSync(artifactFolder, '0777');
-
-                    const spawnResult = spawn(artifactDescriptor.launchCommand.split(' ')[0], artifactDescriptor.launchCommand.split(' ').slice(1), {
-                        cwd: artifactFolder,
-                        detached : true,
-                        stdio: 'ignore',
-                        env : {
-                            ...process.env,
-                            PORT : artifactServerPort
-                        }
-                    });
-
-                    artifactProcessPID = spawnResult.pid;
-                    
-                    spawnResult.unref();
-                }
                 
                 break;
             case 'maven':
-                execSync('mvn clean install', {
-                    cwd: artifactFolder,
-                    stdio: 'inherit'
+                const mvnCleanInstallResult = execSync('mvn clean install', {
+                    cwd: artifactFolder
                 });
+        
+                log(logFile, 'INFO', mvnCleanInstallResult.toString());
                 break;
         }
 
         if(artifactDescriptor.deployType == 'server'){
+            fs.chmodSync(artifactFolder, '0777');
+
+            console.log("justo antes de lanzar el proceso!", artifactDescriptor);
+            const spawnResult = spawn(artifactDescriptor.launchCommand.split(' ')[0], artifactDescriptor.launchCommand.split(' ').slice(1), {
+                cwd: artifactFolder,
+                detached : true,
+                stdio: 'ignore',
+                env : {
+                    ...process.env,
+                    PORT : artifactServerPort
+                }
+            });
+
+            artifactProcessPID = spawnResult.pid;
+            
+            spawnResult.unref();
+
             createVirtualHost(artifactDescriptor.domain, {
                 type : artifactDescriptor.deployType,
                 name : artifactDescriptor.artifactName,
@@ -179,17 +179,18 @@ module.exports = async function deploy(pendingDeploy) {
             });
         }
 
-        artifactDescriptor.instance = {
-            lastUpdate : new Date().getTime(),
-            status : 'running',
-            pid : artifactProcessPID
-        }
+        updateArtifactDescriptor(pendingDeploy.artifactName, {
+            instance : {
+                lastUpdate : new Date().getTime(),
+                status : 'running',
+                pid : artifactProcessPID,
+                lastDeployKey : pendingDeploy.key
+            }
+        });
+        
+        deletePendingDeploy(pendingDeploy.key);
 
-        fs.writeFileSync(
-            deploymentsInfoPath,
-            JSON.stringify(deploymentsInfo),
-            'UTF-8'
-        );
+        log(logFile, 'INFO', 'Deploy ends OK');
     }catch(e){
         log(logFile, 'ERROR', e);
 
@@ -203,6 +204,6 @@ module.exports = async function deploy(pendingDeploy) {
         
         deletePendingDeploy(pendingDeploy.key);
 
-        log(logFile, 'INFO', 'Deploy ends');
+        log(logFile, 'INFO', 'Deploy ends with ERROR');
     }
 };

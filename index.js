@@ -4,10 +4,10 @@ var bodyParser = require('body-parser');
 var cors = require('cors');
 var cron = require('node-cron');
 
-var log_file = fs.createWriteStream(__dirname + '/debug.log', {flags : 'w'});
-var log_stdout = process.stdout;
+//var log_file = fs.createWriteStream(__dirname + '/debug.log', {flags : 'w'});
+//var log_stdout = process.stdout;
 
-console.log = function(d) { //
+/* console.log = function(d) { //
   log_file.write('[LOG] ' + util.format(d) + '\n');
   log_stdout.write('[LOG] ' + util.format(d) + '\n');
 };
@@ -15,7 +15,7 @@ console.log = function(d) { //
 console.error = function(d) { //
   log_file.write('[ERROR] ' + util.format(d) + '\n');
   log_stdout.write('[ERROR] ' + util.format(d) + '\n');
-};
+}; */
 
 const createArtifact = require('./utils/create-artifact');
 const deploy = require('./utils/deploy');
@@ -84,7 +84,7 @@ app.listen(port, () => {
 cron.schedule('*/1 * * * *', () => {
   let pendingDeploys = getPendingDeploys();
   
-  if(pendingDeploys.length > 0/*  && pendingDeploys.filter(pendingDeploy => pendingDeploy.status == 'running') == 0 */){
+  if(pendingDeploys.length > 0 && pendingDeploys.filter(pendingDeploy => pendingDeploy.status == 'running') == 0){
     deploy(pendingDeploys[0]);
   }
 });

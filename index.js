@@ -23,6 +23,7 @@ const deploy = require('./utils/deploy');
 const express = require('express');
 const createDeploy = require('./utils/create-deploy');
 const getPendingDeploys = require('./utils/get-pending-deploys');
+const getDeployLog = require('./utils/get-deploy-log');
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
@@ -58,7 +59,16 @@ app.get('/pending_deployments', (req, res) => {
 
   res.status(200);
   res.end(JSON.stringify(pendingDeployments));
-})
+});
+
+app.get('/deploy_log', (req, res) => {
+  const deployKey = req.query.deploy_key;
+  const deployLog = getDeployLog(deployKey);
+
+  res.status(200);
+  res.end(deployLog);
+});
+
 
 app.post('/artifact', (req, res) => {
   const artifactDefinition = req.body;

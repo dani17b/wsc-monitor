@@ -1,10 +1,37 @@
 const fs = require('fs-extra');
 const { execSync,spawn } = require("child_process");
 const createVirtualHost = require('./create-virtual-host');
+const updatePendingDeploy = require('./update-pending-deploy');
+
+const log = (file, level, content) => {
+    let logContents = fs.existsSync(file) ? fs.readFileSync(file, {
+        encoding : 'UTF-8'
+    }) : '';
+
+    fs.writeFileSync(
+        file,
+        logContents + `[${level}] ` + content + '\n',
+        'UTF-8'
+    );
+}
 
 
-module.exports = async function deploy(artifactName, options) {
-    const artifactFolder = `/home/apps/${artifactName}`;
+module.exports = async function deploy(pendingDeploy) {
+
+    console.log('HACER EL DEPLOY');
+    console.log(JSON.stringify(pendingDeploy));
+
+    // 1. Update deploy status
+    updatePendingDeploy({
+        ...pendingDeploy,
+        status : 'running'
+    });
+
+    log(`/home/apps/.deploy-${pendingDeploy.key}.log`, 'INFO', 'Start deploy');
+
+    // TODO hacer algo que sea volcar a log
+
+    /* const artifactFolder = `/home/apps/${artifactName}`;
 
     // 1. Get artifact descriptor
     const deploymentsInfoPath = `/home/apps/.deployments-info.json`;
@@ -115,5 +142,5 @@ module.exports = async function deploy(artifactName, options) {
         deploymentsInfoPath,
         JSON.stringify(deploymentsInfo),
         'UTF-8'
-    );
+    ); */
 };

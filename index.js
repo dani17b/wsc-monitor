@@ -82,7 +82,9 @@ app.listen(port, () => {
 });
 
 cron.schedule('*/1 * * * *', () => {
-  const pendingDeploys = getPendingDeploys();
-  console.log('CHECK DEPLOYS PENDING running a task 1 minute');
-  console.log(JSON.stringify(pendingDeploys));
+  let pendingDeploys = getPendingDeploys();
+  
+  if(pendingDeploys.length > 0/*  && pendingDeploys.filter(pendingDeploy => pendingDeploy.status == 'running') == 0 */){
+    deploy(pendingDeploys[0]);
+  }
 });

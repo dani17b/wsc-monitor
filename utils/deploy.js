@@ -122,6 +122,7 @@ module.exports = async function deploy(pendingDeploy) {
             log(logFile, 'INFO', `Detected free TCP port on ${artifactServerPort}`);
         }
 
+        let launchArgs = [];
         switch(artifactDescriptor.type){
             case 'node':
                 log(logFile, 'INFO', `Install dependencies`);
@@ -151,6 +152,10 @@ module.exports = async function deploy(pendingDeploy) {
                 });
         
                 log(logFile, 'INFO', mvnCleanInstallResult.toString());
+
+                launchArgs = [
+                    `-Dspring-boot.run.arguments=--server.port=${artifactServerPort}`
+                ]
                 break;
         }
 
@@ -158,10 +163,12 @@ module.exports = async function deploy(pendingDeploy) {
             fs.chmodSync(artifactFolder, '0777');
 
             console.log("justo antes de lanzar el proceso!", artifactDescriptor);
-            const spawnResult = spawn(artifactDescriptor.launchCommand.split(' ')[0], artifactDescriptor.launchCommand.split(' ').slice(1), {
+
+
+            const spawnResult = spawn('nohup', artifactDescriptor.launchCommand.split(' ').concat(launchArgs), {
                 cwd: artifactFolder,
                 detached : true,
-                stdio: 'ignore',
+                //stdio: 'inherit',
                 env : {
                     ...process.env,
                     PORT : artifactServerPort

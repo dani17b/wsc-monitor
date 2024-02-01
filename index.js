@@ -3,22 +3,10 @@ var util = require('util');
 var bodyParser = require('body-parser');
 var cors = require('cors');
 const schedule = require('node-schedule');
-
-//var log_file = fs.createWriteStream(__dirname + '/debug.log', {flags : 'w'});
-//var log_stdout = process.stdout;
-
-/* console.log = function(d) { //
-  log_file.write('[LOG] ' + util.format(d) + '\n');
-  log_stdout.write('[LOG] ' + util.format(d) + '\n');
-};
-
-console.error = function(d) { //
-  log_file.write('[ERROR] ' + util.format(d) + '\n');
-  log_stdout.write('[ERROR] ' + util.format(d) + '\n');
-}; */
+const { spawn } = require("child_process");
 
 const createArtifact = require('./utils/create-artifact');
-const deploy = require('./utils/deploy');
+
 
 const express = require('express');
 const createDeploy = require('./utils/create-deploy');
@@ -38,15 +26,23 @@ app.get('/info', (req, res) => {
       encoding : 'UTF-8'
   }));
 
+  const orderedDeploymentsInfo = Object.keys(deploymentsInfo).sort((deploymentInfoItemKey1, deploymentInfoItemKey2) => {
+    return deploymentsInfo[deploymentInfoItemKey1].instance?.lastUpdate > deploymentsInfo[deploymentInfoItemKey2].instance?.lastUpdate ? -1 : 1;
+  }).reduce(
+    (obj, key) => { 
+      obj[key] = deploymentsInfo[key]; 
+      return obj;
+    }, 
+    {}
+  );
+  
   res.header("Content-Type",'application/json');
   res.status(200);
-  res.end(JSON.stringify(deploymentsInfo));
+  res.end(JSON.stringify(orderedDeploymentsInfo));
 });
 
 app.post('/deploy', (req, res) => {
   const body = req.body;
-  console.log("body : " + JSON.stringify(body));
-  //deploy(body.artifactName, {});
   const deployInfo = createDeploy(body.artifactName);
   
   res.header("Content-Type",'application/json');
@@ -72,9 +68,9 @@ app.get('/deploy_log', (req, res) => {
 
 app.post('/artifact', (req, res) => {
   const artifactDefinition = req.body;
-  createArtifact(artifactDefinition);
+  const createdArtifact = createArtifact(artifactDefinition);
   res.status(200);
-  res.end();
+  res.end(JSON.stringify(createdArtifact));
 });
 
 app.listen(port, () => {
@@ -85,6 +81,14 @@ schedule.scheduleJob('*/1 * * * *', () => {
   let pendingDeploys = getPendingDeploys();
   
   if(pendingDeploys.length > 0 && pendingDeploys.filter(pendingDeploy => pendingDeploy.status == 'running') == 0){
-    deploy(pendingDeploys[0]);
+    //deploy(pendingDeploys[0].key);
+    const spawnResult = spawn('node', ['launch-deploy.js', pendingDeploys[0].key], {
+      detached : true,
+      stdio: 'inherit'
+    });
+  
+    artifactProcessPID = spawnResult.pid;
+  
+    spawnResult.unref();
   }
 });

@@ -54,11 +54,11 @@ const updateArtifactDescriptor = (artifactName, descriptorUpdated) => {
     );
 }
 
-
-module.exports = async function deploy(pendingDeploy) {
+module.exports = async function deploy(pendingDeployKey) {
+    const pendingDeploy = getPendingDeploys().filter(deployItem => deployItem.key == pendingDeployKey)[0];
 
     const logFile = `/home/apps/.deploy-${pendingDeploy.key}.log`;
-
+    
     try{
         // 1. Update deploy status
         updatePendingDeploy({
@@ -162,13 +162,9 @@ module.exports = async function deploy(pendingDeploy) {
         if(artifactDescriptor.deployType == 'server'){
             fs.chmodSync(artifactFolder, '0777');
 
-            console.log("justo antes de lanzar el proceso!", artifactDescriptor);
-
-
             const spawnResult = spawn('nohup', artifactDescriptor.launchCommand.split(' ').concat(launchArgs), {
                 cwd: artifactFolder,
                 detached : true,
-                //stdio: 'inherit',
                 env : {
                     ...process.env,
                     PORT : artifactServerPort

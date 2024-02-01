@@ -6,7 +6,7 @@ const GH_TOKEN = fs.readFileSync('/etc/nginx/.user_sec', {
     encoding : 'UTF-8'
 });
 
-module.exports = async function createArtifact(options) {
+module.exports = function createArtifact(options) {
     // 1. Clone repository
     const artifactFolder = `/home/apps/${options.artifactName}`;
 
@@ -35,8 +35,10 @@ module.exports = async function createArtifact(options) {
         'UTF-8'
     );
 
+    return options;
+
     // 3. Get free port
-    let artifactServerPort = null;
+    /* let artifactServerPort = null;
     if(artifactDescriptor.deployType == 'server'){
         fs.chmodSync(`./scripts/getFreePort.sh`, 755);
         artifactServerPort = execSync(`./scripts/getFreePort.sh 3000 1`);
@@ -49,5 +51,5 @@ module.exports = async function createArtifact(options) {
         name : options.artifactName,
         target : options.deployTarget,
         port : artifactServerPort
-    });
+    }); */
 };

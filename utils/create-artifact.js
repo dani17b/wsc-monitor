@@ -13,8 +13,10 @@ module.exports = function createArtifact(options) {
     if(!fs.existsSync(artifactFolder)){
         let repository = options.repository;
         if(options.private){
-            repository = `https://${GH_TOKEN}@${options.repository.split('https://')[1]}`;
+            repository = `https://${GH_TOKEN.trim()}@${options.repository.split('https://')[1]}`;
         }
+
+        console.log('Clone repository', repository);
         
         execSync(`git clone ${repository} ${artifactFolder}`, {
             stdio: 'inherit'
@@ -36,20 +38,4 @@ module.exports = function createArtifact(options) {
     );
 
     return options;
-
-    // 3. Get free port
-    /* let artifactServerPort = null;
-    if(artifactDescriptor.deployType == 'server'){
-        fs.chmodSync(`./scripts/getFreePort.sh`, 755);
-        artifactServerPort = execSync(`./scripts/getFreePort.sh 3000 1`);
-        artifactServerPort = parseInt(artifactServerPort);
-    }
-
-    // 4. Create virtual host
-    createVirtualHost(options.domain, {
-        type : options.deployType,
-        name : options.artifactName,
-        target : options.deployTarget,
-        port : artifactServerPort
-    }); */
 };

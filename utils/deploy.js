@@ -110,6 +110,25 @@ module.exports = async function deploy(pendingDeployKey) {
 
         log(logFile, 'INFO', gitPullResult.toString());
 
+        // Get last commit message
+        const gitLogResult = execSync('git log --pretty=format:"%ad//%aN//%al//%s" -1', {
+            cwd: artifactFolder
+        });
+
+        const gitLogResultParts = gitLogResult.toString().split('//');
+
+        let authorEmail = gitLogResultParts[2];
+        authorEmail = authorEmail.indexOf('+') != -1 ? authorEmail.split('+')[1] : authorEmail;
+
+        const lastCommitInfo = {
+            date : gitLogResultParts[0],
+            author : {
+                name : gitLogResultParts[1],
+                email: authorEmail
+            },
+            message : gitLogResultParts[3]
+        };
+
         // 3. Install dependencies and build artifact
         let artifactProcessPID = undefined;
 
@@ -133,9 +152,19 @@ module.exports = async function deploy(pendingDeployKey) {
                 log(logFile, 'INFO',  npmInstallResult.toString());
 
                 if(artifactDescriptor.deployType == 'static'){
+
+                    fs.writeFileSync(
+                        `${artifactFolder}/.env`,
+                        `REACT_APP_ENV=DES`,
+                        'UTF-8'
+                    );
+
                     try{
                         const npmRunBuildResult = execSync('npm run build', {
-                            cwd: artifactFolder
+                            cwd: artifactFolder,
+                            env : {
+                                ...process.env
+                            }
                         });
 
                         console.log("Build result", npmRunBuildResult.toString());
@@ -157,6 +186,15 @@ module.exports = async function deploy(pendingDeployKey) {
                     `-Dspring-boot.run.arguments=--server.port=${artifactServerPort}`
                 ]
                 break;
+            case 'python':
+                console.log("Antes de instalar las dependencias");
+                const pythonInstallResult = execSync('pip install -r requirements.txt', {
+                    cwd: artifactFolder
+                });
+        
+                log(logFile, 'INFO', pythonInstallResult.toString());
+
+                break;
         }
 
         if(artifactDescriptor.deployType == 'server'){
@@ -167,7 +205,8 @@ module.exports = async function deploy(pendingDeployKey) {
                 detached : true,
                 env : {
                     ...process.env,
-                    PORT : artifactServerPort
+                    PORT : artifactServerPort,
+                    ENV : 'DES'
                 }
             });
 
@@ -187,8 +226,9 @@ module.exports = async function deploy(pendingDeployKey) {
                 lastUpdate : new Date().getTime(),
                 status : 'running',
                 pid : artifactProcessPID,
-                lastDeployKey : pendingDeploy.key
-            }
+                lastDeployKey : pendingDeploy.key,
+            },
+            lastCommitInfo
         });
         
         deletePendingDeploy(pendingDeploy.key);
